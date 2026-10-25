@@ -1,0 +1,22 @@
+Imágenes auditadas: 1699
+
+[infected]  n = 711  (train=0, test=711)
+  tamaños distintos: 7 | más frecuente: 300x300 (25 %)
+  ancho mediano: 300 | alto mediano: 300 | bytes medianos: 13849
+  modos: RGB=711
+  brillo medio: 73.1 | desvío medio: 61.3
+  con >1 % de píxeles saturados: 29 % | con color (>0,1 % de píxeles): 0 %
+
+[notinfected]  n = 988  (train=1, test=987)
+  tamaños distintos: 4 | más frecuente: 984x848 (32 %)
+  ancho mediano: 850 | alto mediano: 578 | bytes medianos: 54670
+  modos: RGB=986, P=1, L=1
+  brillo medio: 53.4 | desvío medio: 44.5
+  con >1 % de píxeles saturados: 0 % | con color (>0,1 % de píxeles): 6 %
+
+Chequeo de atajos: AUC solo con metadatos (tamaño, bytes, brillo, saturación, color) = 1.000 -> ALERTA: la clase se predice sin mirar el ovario; hay sesgo de adquisición
+  (CV sin agrupar: los near-duplicados lo inflan un poco. ~0,5 es lo esperable.)
+
+Revisión visual pendiente (a mano):
+  - /Users/somi/Documents/PSIB/PSIB_Grupo15_PCOS/reports/muestra_azar_<clase>.jpg y muestra_marcas_<clase>.jpg
+  - anotar en el informe: ¿hay texto, calibres, logos? ¿en qué proporción por clase?

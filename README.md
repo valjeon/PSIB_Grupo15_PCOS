@@ -14,8 +14,9 @@ con sus clases infected / non-infected. El dataset original está en
 - `merge_data.py`: script de unificación
 
 ## Orden en que se corren los archivos:
-
 python merge_data.py
 python clean_data.py
 python audit_data.py
 python make_splits.py
+python comparar_preprocesamiento.py
+python procesar_dataset.py

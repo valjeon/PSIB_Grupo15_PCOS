@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 .vscode/
-data/all/
-data/clean/
-excluidas.csv
+data/
+reports/*.jpg
+reports/*.png
+splits_*.csv

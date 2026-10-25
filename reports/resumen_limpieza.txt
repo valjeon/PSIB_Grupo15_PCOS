@@ -1,0 +1,17 @@
+Umbral pHash: 4 | desvío mínimo: 2.0
+Imágenes en /Users/somi/Documents/PSIB/PSIB_Grupo15_PCOS/data/all: 3856
+Excluidas: 2157
+  no se pudo abrir: 10
+  casi vacías: 0
+  duplicadas: 2147
+    por origen (copia - original conservado):
+      test-test: 224
+      test-train: 1923
+  conflicto de clase: 0 imágenes en 0 grupos
+Conservadas: 1699
+  infected: 711
+  notinfected: 988
+  por origen: test=1698, train=1
+Modos de color: RGB=1697, L=1, P=1
+Tamaños más frecuentes: 984x848=320, 850x578=248, 630x436=246, 300x300=176, 315x160=174
+Tamaños distintos: 11

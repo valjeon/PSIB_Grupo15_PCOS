@@ -20,7 +20,9 @@ import statistics as st
 import numpy as np
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent
+if ROOT.name == "procesamiento":  # funciona dentro de procesamiento/ o en la raíz del repo
+    ROOT = ROOT.parent
 CLEAN = ROOT / "data" / "clean"
 REPORTES = ROOT / "reports"
 EXT = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"}
@@ -31,12 +33,14 @@ def origen(nombre):
     return pref if pref in ("train", "test") else "?"
 
 
-def medir(ruta):
+def medir(ruta, sin_color=False):
     with Image.open(ruta) as im:
         ancho, alto = im.size
         modo = im.mode
         gris = np.asarray(im.convert("L"), dtype=np.float32)
         rgb = np.asarray(im.convert("RGB"), dtype=np.int16)
+    color = (rgb.max(axis=2) - rgb.min(axis=2)) > 40  # píxeles con color marcado
+    g = gris[~color] if (sin_color and (~color).any()) else gris.ravel()
     return {
         "path": ruta.relative_to(ROOT).as_posix(),
         "clase": ruta.parent.name,
@@ -45,12 +49,12 @@ def medir(ruta):
         "alto": alto,
         "modo": modo,
         "bytes": ruta.stat().st_size,
-        "brillo": float(gris.mean()),
-        "desvio": float(gris.std()),
+        "brillo": float(g.mean()),
+        "desvio": float(g.std()),
         # píxeles casi blancos: texto, calibres, marcas de escala
-        "frac_sat": float((gris >= 250).mean()),
+        "frac_sat": float((g >= 250).mean()),
         # píxeles con color marcado: anotaciones amarillas/verdes sobre fondo gris
-        "frac_color": float(((rgb.max(axis=2) - rgb.min(axis=2)) > 40).mean()),
+        "frac_color": float(color.mean()),
     }
 
 
@@ -73,7 +77,7 @@ def montaje(rutas, destino, cols=8, lado=180):
     hoja.save(destino, quality=90)
 
 
-def sesgo_por_metadatos(filas, seed):
+def sesgo_por_metadatos(filas, seed, excluir=()):
     """AUC de un clasificador que NO ve el contenido: solo tamaño, bytes, brillo, etc."""
     try:
         from sklearn.ensemble import RandomForestClassifier
@@ -84,13 +88,22 @@ def sesgo_por_metadatos(filas, seed):
     clases = sorted({f["clase"] for f in filas})
     if len(clases) != 2 or len(filas) < 50:
         return None
+    nombres = ["ancho", "alto", "aspecto", "bytes", "brillo", "desvio", "frac_sat", "frac_color"]
     X = np.array([[f["ancho"], f["alto"], f["ancho"] / f["alto"], f["bytes"], f["brillo"],
                    f["desvio"], f["frac_sat"], f["frac_color"]] for f in filas])
     y = np.array([f["clase"] == clases[1] for f in filas], dtype=int)
+    keep = [k for k, nom in enumerate(nombres) if nom not in excluir]
+    nombres = [nombres[k] for k in keep]
+    X = X[:, keep]
     rf = RandomForestClassifier(n_estimators=200, random_state=seed, n_jobs=-1)
     p = cross_val_predict(rf, X, y, cv=StratifiedKFold(5, shuffle=True, random_state=seed),
                           method="predict_proba")[:, 1]
-    return roc_auc_score(y, p)
+    # AUC de cada característica sola (simetrizado: 0,5 = no separa, 1 = separa perfecto)
+    solas = {}
+    for k, nom in enumerate(nombres):
+        a = roc_auc_score(y, X[:, k])
+        solas[nom] = max(a, 1 - a)
+    return roc_auc_score(y, p), solas
 
 
 def main():
@@ -98,15 +111,18 @@ def main():
     ap.add_argument("--n-azar", type=int, default=50, help="imágenes al azar por clase")
     ap.add_argument("--n-marcas", type=int, default=40, help="imágenes 'sospechosas' por clase")
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--sin-color", action="store_true",
+                    help="estadísticas de gris sin los píxeles con color; excluye frac_color del chequeo")
     args = ap.parse_args()
+    sufijo = "_sin_color" if args.sin_color else ""
 
     rutas = sorted(p for p in CLEAN.rglob("*") if p.is_file() and p.suffix.lower() in EXT)
     if not rutas:
         raise SystemExit(f"No hay imágenes en {CLEAN}. ¿Corriste clean_data.py?")
-    filas = [medir(r) for r in rutas]
+    filas = [medir(r, args.sin_color) for r in rutas]
     REPORTES.mkdir(exist_ok=True)
 
-    with open(REPORTES / "audit.csv", "w", newline="", encoding="utf-8") as f:
+    with open(REPORTES / f"audit{sufijo}.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(filas[0]))
         w.writeheader()
         w.writerows(filas)
@@ -142,19 +158,25 @@ def main():
         montaje([ROOT / f["path"] for f in sosp[:args.n_marcas]],
                 REPORTES / f"muestra_marcas_{cl}.jpg")
 
-    auc = sesgo_por_metadatos(filas, args.seed)
-    if auc is not None:
+    if args.sin_color:
+        L.insert(1, "MODO --sin-color: brillo, desvío y saturación sin píxeles coloreados; "
+                    "frac_color fuera del chequeo de atajos.")
+    res = sesgo_por_metadatos(filas, args.seed, excluir=("frac_color",) if args.sin_color else ())
+    if res is not None:
+        auc, solas = res
         veredicto = ("ALERTA: la clase se predice sin mirar el ovario; hay sesgo de adquisición"
                      if auc >= 0.65 else "sin señal fuerte de sesgo")
         L += [f"Chequeo de atajos: AUC solo con metadatos (tamaño, bytes, brillo, saturación, "
               f"color) = {auc:.3f} -> {veredicto}",
-              "  (CV sin agrupar: los near-duplicados lo inflan un poco. ~0,5 es lo esperable.)", ""]
+              "  (CV sin agrupar: los near-duplicados lo inflan un poco. ~0,5 es lo esperable.)",
+              "  AUC de cada característica sola (0,5 = no separa): " +
+              ", ".join(f"{k}={v:.2f}" for k, v in sorted(solas.items(), key=lambda kv: -kv[1])), ""]
     L += ["Revisión visual pendiente (a mano):",
           f"  - {REPORTES}/muestra_azar_<clase>.jpg y muestra_marcas_<clase>.jpg",
           "  - anotar en el informe: ¿hay texto, calibres, logos? ¿en qué proporción por clase?"]
     texto = "\n".join(L)
     print(texto)
-    (REPORTES / "resumen_auditoria.txt").write_text(texto + "\n", encoding="utf-8")
+    (REPORTES / f"resumen_auditoria{sufijo}.txt").write_text(texto + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

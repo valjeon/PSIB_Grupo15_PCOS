@@ -21,7 +21,9 @@ import numpy as np
 from PIL import Image
 from sklearn.model_selection import StratifiedGroupKFold
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent
+if ROOT.name == "procesamiento":  # funciona dentro de procesamiento/ o en la raíz del repo
+    ROOT = ROOT.parent
 CLEAN = ROOT / "data" / "clean"
 REPORTES = ROOT / "reports"
 EXT = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"}
@@ -66,6 +68,10 @@ def main():
     ap.add_argument("--holdout", type=float, default=0.2)
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--salida", default="splits.csv",
+                    help="archivo de salida en la raíz del repo (usar otro nombre para experimentar)")
+    ap.add_argument("--clase-positiva", default=CLASE_POSITIVA,
+                    help="nombre de la carpeta de la clase PCOS/anormal (label = 1)")
     args = ap.parse_args()
 
     rutas = sorted(p for p in CLEAN.rglob("*") if p.is_file() and p.suffix.lower() in EXT)
@@ -73,9 +79,10 @@ def main():
         raise SystemExit(f"No hay imágenes en {CLEAN}. ¿Corriste clean_data.py?")
     n = len(rutas)
     clases = np.array([r.parent.name for r in rutas])
-    y = (clases == CLASE_POSITIVA).astype(int)
+    y = (clases == args.clase_positiva).astype(int)
     if y.sum() == 0 or y.sum() == n:
-        raise SystemExit(f"Se esperan dos clases y una es '{CLASE_POSITIVA}'. Encontré: {set(clases)}")
+        raise SystemExit(f"Se esperan dos clases y una es '{args.clase_positiva}'. "
+                         f"Encontré: {set(clases)}. Usá --clase-positiva.")
     orig = np.array([origen(r.name) for r in rutas])
 
     print(f"Calculando pHash de {n} imágenes...")
@@ -110,7 +117,7 @@ def main():
     assert not fugas, f"Grupos repartidos en más de un fold: {fugas[:5]}"
     assert (fold[idx_ho] == -1).all() and (fold[idx_cv] >= 0).all()
 
-    with open(ROOT / "splits.csv", "w", newline="", encoding="utf-8") as f:
+    with open(ROOT / args.salida, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["path", "label", "fold", "split", "clase", "grupo", "origen_kaggle"])
         for i, r in enumerate(rutas):
@@ -139,7 +146,7 @@ def main():
     texto = "\n".join(L)
     print(texto)
     REPORTES.mkdir(exist_ok=True)
-    (REPORTES / "resumen_splits.txt").write_text(texto + "\n", encoding="utf-8")
+    (REPORTES / f"resumen_{Path(args.salida).stem}.txt").write_text(texto + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

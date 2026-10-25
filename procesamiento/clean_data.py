@@ -1,5 +1,3 @@
-from pathlib import Path
-import csv
 """Limpieza de data/all -> data/clean.
 
 Excluye: archivos que no abren, imágenes casi vacías, duplicados (pHash) y
@@ -14,7 +12,9 @@ import shutil
 import imagehash
 from PIL import Image, ImageStat
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent
+if ROOT.name == "procesamiento":  # funciona dentro de procesamiento/ o en la raíz del repo
+    ROOT = ROOT.parent
 SRC = ROOT / "data" / "all"
 DST = ROOT / "data" / "clean"
 REPORTES = ROOT / "reports"

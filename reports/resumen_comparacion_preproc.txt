@@ -1,0 +1,32 @@
+Muestra de métricas: hasta 20 imágenes por clase | tamaño 256
+
+FILTROS DE SPECKLE (SSI más bajo = suaviza más; beta más alto = conserva bordes)
+filtro    clase              SSI    beta   ms/img
+bilateral infected         0.968   0.746      1.0
+bilateral notinfected      0.943   0.670      1.0
+frost     infected         0.955   0.398     13.3
+frost     notinfected      0.926   0.309     13.3
+gaussiano infected         0.949   0.548      0.1
+gaussiano notinfected      0.924   0.455      0.1
+kuan      infected         0.970   0.748      0.6
+kuan      notinfected      0.943   0.682      0.6
+lee       infected         0.972   0.749      0.7
+lee       notinfected      0.945   0.683      0.7
+mediana   infected         0.972   0.456      0.1
+mediana   notinfected      0.948   0.300      0.1
+nlm       infected         0.993   0.891     34.1
+nlm       notinfected      0.974   0.851     34.1
+
+CONTRASTE (sobre filtro 'mediana')
+metodo    clase           entropia   desvio
+clahe     infected           7.445    68.11
+clahe     notinfected        7.175    54.84
+estirar   infected           6.865    72.28
+estirar   notinfected        6.485    65.16
+global    infected           6.732    74.30
+global    notinfected        6.409    77.73
+ninguno   infected           6.904    59.01
+ninguno   notinfected        6.541    40.37
+
+Figuras: reports/preproc_marcas.png, preproc_filtros.png, preproc_contraste.png
+Elegir mirando las figuras: ¿se ven los folículos nítidos y sin halos? Anotar la elección y su justificación en el informe.

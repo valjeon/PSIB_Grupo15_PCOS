@@ -1,0 +1,16 @@
+Imágenes: 1699 | infected: 711 | notinfected: 988
+Umbral de agrupado (pHash): 14
+Grupos: 82 | grupos con >1 imagen: 18 (1635 imágenes) | grupo más grande: 1523
+Grupos con clases mezcladas: 1
+Grupos con imágenes de train Y test de Kaggle: 1 (1523 imágenes)  <- evidencia de fuga en la partición original
+ATENCIÓN: un grupo de 1523 imágenes (89.6 %) sugiere encadenamiento de similitud. Probá --umbral-grupo más bajo (6, 5...).
+
+split    fold      n  infected  notinf.  % inf.
+cv          0     35        32        3    91.4
+cv          1     35        32        3    91.4
+cv          2     35        32        3    91.4
+cv          3     36        31        5    86.1
+cv          4     35        32        3    91.4
+holdout    -1   1523       552      971    36.2
+
+Verificación: ningún grupo cruza folds ni hold-out: OK

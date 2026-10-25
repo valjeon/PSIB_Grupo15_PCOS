@@ -1,0 +1,6 @@
+Config: filtro=lee contraste=clahe tam=256 marcas=True recorte=True texto=True
+Procesadas: 1699 de 1699 -> /Users/somi/Documents/PSIB/PSIB_Grupo15_PCOS/data/pre
+
+Control de atajos tras preprocesar (solo estadísticos, sin ver el contenido): AUC = 0.949 -> las clases siguen siendo separables por estadísticos de bajo nivel: hay pistas de la fuente
+  (CV agrupada por near-duplicados (splits_u14.csv))
+  AUC por estadístico: desvio=0.93, frac_clara=0.90, lap_var=0.84, entropia=0.84, asimetria=0.81, curtosis=0.74, media=0.70, frac_oscura=0.55, grad_medio=0.51
