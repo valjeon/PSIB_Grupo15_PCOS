@@ -87,8 +87,8 @@ def control_atajos(filas, claves, seed, archivo="splits.csv"):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--filtro", default="mediana")
-    ap.add_argument("--contraste", default="clahe")
+    ap.add_argument("--filtro", default="mediana5")
+    ap.add_argument("--contraste", default="ninguno")
     ap.add_argument("--tam", type=int, default=256)
     ap.add_argument("--sin-marcas", action="store_true")
     ap.add_argument("--sin-recorte", action="store_true")

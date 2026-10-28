@@ -51,7 +51,7 @@ def main():
     ap.add_argument("--n-fig", type=int, default=8, help="imágenes en las figuras (mitad por clase)")
     ap.add_argument("--n-metricas", type=int, default=20, help="imágenes por clase para las métricas")
     ap.add_argument("--tam", type=int, default=256)
-    ap.add_argument("--filtro-ref", default="mediana", help="filtro previo a la figura de contraste")
+    ap.add_argument("--filtro-ref", default="mediana5", help="filtro previo a la figura de contraste")
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
 

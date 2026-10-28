@@ -19,6 +19,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 from PIL import Image
+from scipy import signal
 
 
 # ---------------------------------------------------------------- lectura
@@ -104,29 +105,6 @@ def _locales(img, w):
     return f, m, v
 
 
-def _cu2(m, v, cu2):
-    """Coeficiente de variación del ruido al cuadrado: mediana sobre zonas no oscuras."""
-    ci2 = v / (m * m + 1e-6)
-    if cu2 is None:
-        zona = m > 10
-        cu2 = float(np.median(ci2[zona])) if zona.any() else float(np.median(ci2))
-    return ci2, cu2
-
-
-def lee(img, w=7, cu2=None):
-    f, m, v = _locales(img, w)
-    ci2, cu2 = _cu2(m, v, cu2)
-    k = np.clip(1 - cu2 / np.maximum(ci2, 1e-6), 0, 1)
-    return np.clip(m + k * (f - m), 0, 255).astype(np.uint8)
-
-
-def kuan(img, w=7, cu2=None):
-    f, m, v = _locales(img, w)
-    ci2, cu2 = _cu2(m, v, cu2)
-    k = np.clip((1 - cu2 / np.maximum(ci2, 1e-6)) / (1 + cu2), 0, 1)
-    return np.clip(m + k * (f - m), 0, 255).astype(np.uint8)
-
-
 def frost(img, w=7, K=2.0):
     f, m, v = _locales(img, w)
     ci2 = v / (m * m + 1e-6)
@@ -143,39 +121,44 @@ def frost(img, w=7, K=2.0):
     return np.clip(num / np.maximum(den, 1e-9), 0, 255).astype(np.uint8)
 
 
-FILTROS = {
-    "ninguno": lambda im: im,
-    "mediana": lambda im: cv2.medianBlur(im, 5),
-    "gaussiano": lambda im: cv2.GaussianBlur(im, (0, 0), 1.5),
-    "bilateral": lambda im: cv2.bilateralFilter(im, 7, 40, 5),
-    "nlm": lambda im: cv2.fastNlMeansDenoising(im, None, 10, 7, 21),
-    "lee": lee,
-    "kuan": kuan,
-    "frost": frost,
-}
+def wiener(img, w=5):
+    with np.errstate(divide="ignore", invalid="ignore"):
+        out = signal.wiener(img.astype(np.float64), (w, w))
+    return np.clip(np.nan_to_num(out, nan=0.0), 0, 255).astype(np.uint8)
 
 
-def filtrar(img, metodo="mediana"):
+def homomorfico(img, sigma=1.5):
+    """Log -> gaussiano -> exp. El log vuelve aditivo el ruido multiplicativo (speckle) y ahí
+    alcanza con un pasabajos común (Vanithamani y Umamaheswari, 2010, lo comparan con otros)."""
+    u = np.log1p(img.astype(np.float32))
+    u = cv2.GaussianBlur(u, (0, 0), sigma)
+    return np.clip(np.expm1(u), 0, 255).astype(np.uint8)
+
+
+FILTROS = {"ninguno": lambda im: im}
+for w in (3, 5, 7):
+    FILTROS[f"promedio{w}"] = lambda im, w=w: cv2.blur(im, (w, w))
+    FILTROS[f"mediana{w}"] = lambda im, w=w: cv2.medianBlur(im, w)
+    FILTROS[f"frost{w}"] = lambda im, w=w: frost(im, w=w)
+for s_ in (1.0, 1.5, 2.0):
+    FILTROS[f"gauss{s_}"] = lambda im, s_=s_: cv2.GaussianBlur(im, (0, 0), s_)
+FILTROS["wiener3"] = lambda im: wiener(im, 3)
+FILTROS["wiener5"] = lambda im: wiener(im, 5)
+FILTROS["homomorfico"] = homomorfico
+
+
+def filtrar(img, metodo="mediana5"):
     return FILTROS[metodo](img)
 
 
 # ---------------------------------------------------------------- contraste
-def _estirar(img, p=(1, 99)):
-    lo, hi = np.percentile(img, p)
-    if hi <= lo:
-        return img
-    return (np.clip((img.astype(np.float32) - lo) / (hi - lo), 0, 1) * 255).astype(np.uint8)
-
-
 CONTRASTES = {
     "ninguno": lambda im: im,
-    "global": cv2.equalizeHist,
-    "clahe": lambda im: cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(im),
-    "estirar": _estirar,
+    "global": cv2.equalizeHist
 }
 
 
-def contrastar(img, metodo="clahe"):
+def contrastar(img, metodo="ninguno"):
     return CONTRASTES[metodo](img)
 
 
@@ -193,7 +176,7 @@ def base(entrada, tam=256, marcas=True, recortar=True, texto=True):
     return a_tamano(gris, tam)
 
 
-def preprocess(entrada, filtro="mediana", contraste="clahe", tam=256,
+def preprocess(entrada, filtro="mediana5", contraste="ninguno", tam=256,
                marcas=True, recortar=True, texto=True):
     """uint8 (tam, tam). Es la función que usa el resto del proyecto."""
     g = base(entrada, tam, marcas, recortar, texto)
