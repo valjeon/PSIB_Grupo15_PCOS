@@ -19,6 +19,7 @@ Uso:
     python anotar_rois.py --n-por-clase 20          # 40 imágenes en total
     python elegir_filtro_enl.py --rois rois.csv
 """
+from collections import defaultdict
 from pathlib import Path
 import argparse
 import csv
@@ -26,12 +27,49 @@ import random
 
 import cv2
 
-from elegir_filtro_enl import ROOT, armar_muestra
 from preprocess import base
 
+ROOT = Path(__file__).resolve().parent
+if ROOT.name == "procesamiento":  # funciona dentro de procesamiento/ o en la raíz del repo
+    ROOT = ROOT.parent
+CLEAN = ROOT / "data" / "clean"
+EXT = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"}
 ZOOM = 3
 ROIS = ROOT / "rois.csv"
 CAMPOS = ["path", "clase", "x", "y", "lado", "tam"]
+
+
+def leer_splits(archivo="splits.csv"):
+    f = ROOT / archivo
+    if not f.exists():
+        return None
+    with open(f, encoding="utf-8") as fh:
+        return [r for r in csv.DictReader(fh)]
+
+
+def armar_muestra(n_por_clase, rng):
+    """Devuelve [(ruta, clase)], balanceada por clase, independiente de near-duplicados.
+    Con splits.csv usa solo split == "cv" (el hold-out no se toca) y una imagen por grupo."""
+    filas = leer_splits()
+    por_clase = defaultdict(list)
+    if filas is not None:
+        por_grupo = {}
+        for r in filas:
+            if r["split"] != "cv":
+                continue
+            por_grupo.setdefault((r["clase"], r["grupo"]), []).append(ROOT / r["path"])
+        for (cl, _), rutas in por_grupo.items():
+            por_clase[cl].append(rng.choice(rutas))
+        origen = "splits.csv (solo split=cv, una imagen por grupo)"
+    else:
+        for p in sorted(CLEAN.rglob("*")):
+            if p.is_file() and p.suffix.lower() in EXT:
+                por_clase[p.parent.name].append(p)
+        origen = "data/clean al azar (no hay splits.csv)"
+    muestra = []
+    for cl, rutas in sorted(por_clase.items()):
+        muestra += [(p, cl) for p in rng.sample(rutas, min(n_por_clase, len(rutas)))]
+    return muestra, origen
 
 
 class Bloques:

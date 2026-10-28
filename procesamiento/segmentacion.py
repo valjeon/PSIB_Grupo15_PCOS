@@ -132,6 +132,12 @@ def _umbral_oscuro(pre, roi, metodo, sigma=2.0):
             return np.zeros_like(roi)
         fase = 1 if pre[ls == 1].mean() < pre[ls == 0].mean() else 0
         return (ls == fase) & roi
+    if metodo == "triangle":
+        return (pre < filters.threshold_triangle(vals)) & roi
+    if metodo == "li":
+        return (pre < filters.threshold_li(vals)) & roi
+    if metodo == "adaptativo":
+        return (pre < filters.threshold_local(pre, block_size=51, offset=15)) & roi
     raise ValueError(f"método desconocido: {metodo}")
 
 

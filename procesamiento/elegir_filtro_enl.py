@@ -25,7 +25,7 @@ import cv2
 import numpy as np
 from scipy import stats
 
-from preprocess import FILTROS, base, beta
+from preprocess import FILTROS, base, beta, filtrar
 
 ROOT = Path(__file__).resolve().parent
 if ROOT.name == "procesamiento":  # funciona dentro de procesamiento/ o en la raíz del repo
@@ -85,6 +85,8 @@ def main():
     muestra = [(p, cl) for p, (cl, _) in manual.items()]
     origen = f"{args.rois} (bloques marcados a mano)"
     filtros = {k: v for k, v in FILTROS.items() if k != "ninguno"}
+    CADENAS = ["wiener3+frost3"]
+    filtros.update({c: (lambda im, c=c: filtrar(im, c)) for c in CADENAS})
     nombres = list(filtros)
     REPORTES.mkdir(exist_ok=True)
 

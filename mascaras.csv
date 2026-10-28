@@ -1,0 +1,15 @@
+imagen,clase,mascara,n_foliculos,conjunto,tam
+data/clean/notinfected/test_img_0_3575.jpg,notinfected,mascaras/notinfected__test_img_0_3575.png,0,ajuste,256
+data/clean/notinfected/test_img_0_3410.jpg,notinfected,mascaras/notinfected__test_img_0_3410.png,0,reporte,256
+data/clean/infected/test_img_0_7648.jpg,infected,mascaras/infected__test_img_0_7648.png,2,reporte,256
+data/clean/infected/test_img_0_2968.jpg,infected,mascaras/infected__test_img_0_2968.png,1,reporte,256
+data/clean/infected/test_img_0_330.jpg,infected,mascaras/infected__test_img_0_330.png,2,reporte,256
+data/clean/notinfected/test_img_0_3456.jpg,notinfected,mascaras/notinfected__test_img_0_3456.png,1,ajuste,256
+data/clean/notinfected/test_img_0_9621.jpg,notinfected,mascaras/notinfected__test_img_0_9621.png,0,ajuste,256
+data/clean/notinfected/test_img_0_2928.jpg,notinfected,mascaras/notinfected__test_img_0_2928.png,1,ajuste,256
+data/clean/infected/test_img_0_2507.jpg,infected,mascaras/infected__test_img_0_2507.png,1,reporte,256
+data/clean/infected/test_img_0_1797.jpg,infected,mascaras/infected__test_img_0_1797.png,5,reporte,256
+data/clean/infected/test_img_0_9640.jpg,infected,mascaras/infected__test_img_0_9640.png,2,reporte,256
+data/clean/notinfected/test_img_0_1336.jpg,notinfected,mascaras/notinfected__test_img_0_1336.png,1,reporte,256
+data/clean/infected/test_img_0_155.jpg,infected,mascaras/infected__test_img_0_155.png,2,ajuste,256
+data/clean/infected/test_img_0_9818.jpg,infected,mascaras/infected__test_img_0_9818.png,5,ajuste,256

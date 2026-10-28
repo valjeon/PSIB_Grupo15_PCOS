@@ -135,6 +135,13 @@ def homomorfico(img, sigma=1.5):
     return np.clip(np.expm1(u), 0, 255).astype(np.uint8)
 
 
+def homomorfico_wiener(img, w=3):
+    u = np.log1p(img.astype(np.float64))
+    with np.errstate(divide="ignore", invalid="ignore"):
+       u = np.nan_to_num(signal.wiener(u, (w, w)), nan=0.0)
+    return np.clip(np.expm1(u), 0, 255).astype(np.uint8)
+
+
 FILTROS = {"ninguno": lambda im: im}
 for w in (3, 5, 7):
     FILTROS[f"promedio{w}"] = lambda im, w=w: cv2.blur(im, (w, w))
@@ -145,10 +152,13 @@ for s_ in (1.0, 1.5, 2.0):
 FILTROS["wiener3"] = lambda im: wiener(im, 3)
 FILTROS["wiener5"] = lambda im: wiener(im, 5)
 FILTROS["homomorfico"] = homomorfico
+FILTROS["homomorfico_wiener3"] = lambda im: homomorfico_wiener(im, 3)
 
 
 def filtrar(img, metodo="mediana5"):
-    return FILTROS[metodo](img)
+    for paso in metodo.split("+"):
+        img = FILTROS[paso](img)
+    return img
 
 
 # ---------------------------------------------------------------- contraste

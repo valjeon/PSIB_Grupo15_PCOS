@@ -5,39 +5,43 @@ ENL mediano de la imagen original en esos bloques: 25.90
 RANKING POR ENL (cociente = ENL filtrada / ENL original; mayor = más supresión de speckle)
 filtro          cociente med.             IQR  ENL med.   beta*   ms/img
 promedio7                3.92    [2.98, 6.78]    118.80   0.032      0.1
-frost7                   3.70    [2.88, 6.40]    112.36   0.377     36.6
+frost7                   3.70    [2.88, 6.40]    112.36   0.377     36.8
 gauss2.0                 3.69    [2.81, 6.19]    110.38   0.340      0.2
 mediana7                 3.60    [2.86, 5.93]     99.08   0.333      2.6
 gauss1.5                 2.69    [2.19, 4.05]     73.63   0.492      0.2
 promedio5                2.68    [2.19, 4.11]     72.15   0.145      0.1
-frost5                   2.59    [2.14, 3.86]     68.83   0.399     19.2
-homomorfico              2.57    [2.16, 3.82]     69.42   0.450      1.3
+frost5                   2.59    [2.14, 3.86]     68.83   0.399     20.1
+homomorfico              2.57    [2.16, 3.82]     69.42   0.450      1.2
 wiener5                  2.54    [2.05, 3.72]     66.02   0.695      6.1
 mediana5                 2.50    [2.03, 3.53]     63.09   0.411      0.3
+wiener3+frost3           2.02    [1.77, 2.59]     52.58   0.657     14.2
 gauss1.0                 1.83    [1.65, 2.23]     45.52   0.732      0.2
-promedio3                1.60    [1.50, 1.91]     39.96   0.595      0.1
-frost3                   1.58    [1.47, 1.88]     39.24   0.691      7.8
+promedio3                1.60    [1.50, 1.91]     39.96   0.595      0.2
+frost3                   1.58    [1.47, 1.88]     39.24   0.691      8.0
+homomorfico_wiener3          1.55    [1.46, 1.83]     38.56   0.724      7.4
 wiener3                  1.54    [1.43, 1.79]     37.23   0.820      6.7
-mediana3                 1.46    [1.35, 1.62]     34.68   0.670      0.0
+mediana3                 1.46    [1.35, 1.62]     34.68   0.670      0.1
 
 * beta (preservación de bordes) se reporta pero NO entra en el ranking.
 
-Friedman entre los 15 filtros: chi2 = 540.8, p = 2e-106
-Wilcoxon pareado de 'promedio7' contra cada uno (p con Bonferroni, 14 comparaciones):
-  promedio7 vs frost7          p = 4.84e-10
-  promedio7 vs gauss2.0        p = 1.27e-10
-  promedio7 vs mediana7        p = 9.99e-06
-  promedio7 vs gauss1.5        p = 2.55e-11
-  promedio7 vs promedio5       p = 2.55e-11
-  promedio7 vs frost5          p = 2.55e-11
-  promedio7 vs homomorfico     p = 2.55e-11
-  promedio7 vs wiener5         p = 2.55e-11
-  promedio7 vs mediana5        p = 2.55e-11
-  promedio7 vs gauss1.0        p = 2.55e-11
-  promedio7 vs promedio3       p = 2.55e-11
-  promedio7 vs frost3          p = 2.55e-11
-  promedio7 vs wiener3         p = 2.55e-11
-  promedio7 vs mediana3        p = 2.55e-11
+Friedman entre los 17 filtros: chi2 = 622.3, p = 4.2e-122
+Wilcoxon pareado de 'promedio7' contra cada uno (p con Bonferroni, 16 comparaciones):
+  promedio7 vs frost7          p = 5.53e-10
+  promedio7 vs gauss2.0        p = 1.46e-10
+  promedio7 vs mediana7        p = 1.14e-05
+  promedio7 vs gauss1.5        p = 2.91e-11
+  promedio7 vs promedio5       p = 2.91e-11
+  promedio7 vs frost5          p = 2.91e-11
+  promedio7 vs homomorfico     p = 2.91e-11
+  promedio7 vs wiener5         p = 2.91e-11
+  promedio7 vs mediana5        p = 2.91e-11
+  promedio7 vs wiener3+frost3  p = 2.91e-11
+  promedio7 vs gauss1.0        p = 2.91e-11
+  promedio7 vs promedio3       p = 2.91e-11
+  promedio7 vs frost3          p = 2.91e-11
+  promedio7 vs homomorfico_wiener3 p = 2.91e-11
+  promedio7 vs wiener3         p = 2.91e-11
+  promedio7 vs mediana3        p = 2.91e-11
 
 FILTROS NO DOMINADOS (ningún otro suaviza más Y conserva más bordes):
   promedio7, frost7, gauss1.5, wiener5, gauss1.0, wiener3
