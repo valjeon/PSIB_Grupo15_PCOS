@@ -1,0 +1,8 @@
+Clave de columnas:
+  A: multiotsu+wiener5+ninguno
+  B: multiotsu+ninguno+ninguno
+  C: chanvese+gauss1.0+ninguno
+  D: multiotsu+gauss1.0+ninguno
+  E: otsu+ninguno+ninguno
+  F: chanvese+frost7+ninguno
+  G: chanvese+ninguno+ninguno

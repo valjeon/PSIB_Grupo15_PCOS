@@ -85,11 +85,27 @@ def metricas_mascara(pred, gt):
                 prec=inter / sp if sp else float("nan"))
 
 
-def superponer_gt(d, gt):
-    """Como superponer() (rojo = automática) más el contorno manual en verde."""
+def recortar_a_zona(lab, zona, frac_min=0.5):
+    """Deja solo los folículos con al menos frac_min de su área dentro de la zona (máscara
+    booleana), recortados a la zona, y los renumera 1..N."""
+    out = np.zeros(lab.shape, np.int32)
+    k = 0
+    for i in np.unique(lab[lab > 0]):
+        m = lab == i
+        if (m & zona).sum() >= frac_min * m.sum():
+            k += 1
+            out[m & zona] = k
+    return out
+
+
+def superponer_gt(d, gt, zona=None):
+    """Como superponer() (rojo = automática) más el contorno manual en verde y la zona en amarillo."""
     rgb = superponer(d)
     cnts, _ = cv2.findContours(gt.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     cv2.drawContours(rgb, cnts, -1, (0, 255, 0), 1)
+    if zona is not None:
+        x, y, l = zona
+        cv2.rectangle(rgb, (x, y), (x + l, y + l), (255, 255, 0), 1)
     return rgb
 
 
@@ -103,10 +119,12 @@ def modo_dice(args, kw):
     if args.conjunto != "ajuste":
         print("AVISO: 'reporte' es para medir el resultado final con la combinación y los "
               "parámetros ya elegidos. Si elegís mirando estos números, deja de ser independiente.")
-    combos = [(f, c) for f in args.filtros for c in args.contrastes]
-    nombre = lambda fc: f"{fc[0]}+{fc[1]}"
-    print(f"{len(filas)} imágenes ({args.conjunto}) x {len(combos)} combinaciones "
-          f"(método: {args.metodo})")
+    if args.combos:
+        combos = [tuple(c.split("+")) for c in args.combos]
+    else:
+        combos = [(m, f, c) for m in args.metodos for f in args.filtros for c in args.contrastes]
+    nombre = lambda fc: "+".join(fc)
+    print(f"{len(filas)} imágenes ({args.conjunto}) x {len(combos)} combinaciones")
 
     por_clase = defaultdict(list)
     for r in filas:
@@ -121,43 +139,51 @@ def modo_dice(args, kw):
         gt = cv2.imread(str(ROOT / r["mascara"]), cv2.IMREAD_UNCHANGED)
         if gt is None:
             raise SystemExit(f"No se pudo leer la máscara {r['mascara']}")
+        zl = int(r.get("zlado") or 0)
+        zona, zrect = np.ones(gt.shape, bool), None
+        if zl > 0:   # zona de evaluación: solo se mide dentro del cuadrado
+            zx, zy = int(r["zx"]), int(r["zy"])
+            zona = np.zeros(gt.shape, bool)
+            zona[zy:zy + zl, zx:zx + zl] = True
+            zrect = (zx, zy, zl)
+        gt = recortar_a_zona(gt, zona)
         gtb = gt > 0
         for fc in combos:
             t0 = time.perf_counter()
-            d = segment_detalle(ROOT / r["imagen"], filtro=fc[0], contraste=fc[1],
-                                metodo=args.metodo, tam=int(r["tam"]), **kw)
+            d = segment_detalle(ROOT / r["imagen"], filtro=fc[1], contraste=fc[2],
+                                metodo=fc[0], tam=int(r["tam"]), **kw)
             tiempos[fc].append(time.perf_counter() - t0)
             if d["mask"].shape != gtb.shape:
                 raise SystemExit(f"{r['imagen']}: la máscara manual es {gtb.shape} y la "
                                  f"segmentación {d['mask'].shape}. ¿Cambió --tam o base_aspecto?")
-            m = metricas_mascara(d["mask"], gtb)
+            pred = recortar_a_zona(d["labels"], zona)
+            m = metricas_mascara(pred > 0, gtb)
             m["clase"] = r["clase"]
             m.update(zip(("n_gt", "n_pred", "tp_gt", "tp_pred"),
-                         deteccion_foliculos(d["labels"], gt, args.iou)))
+                         deteccion_foliculos(pred, gt, args.iou)))
             res[fc][r["imagen"]] = m
             if r["imagen"] in ids_fig:
-                fig[r["imagen"]][fc] = superponer_gt(d, gtb)
+                fig[r["imagen"]][fc] = superponer_gt(d, gtb, zrect)
 
     with open(REPORTES / "seg_dice.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
-        w.writerow(["imagen", "clase", "filtro", "contraste", "dice", "jaccard",
+        w.writerow(["imagen", "clase", "metodo", "filtro", "contraste", "dice", "jaccard",
                     "n_gt", "n_pred", "tp_gt", "tp_pred"])
-        for (f, c), por_img in res.items():
+        for (mt, f, c), por_img in res.items():
             for img, m in por_img.items():
-                w.writerow([img, m["clase"], f, c, round(m["dice"], 4), round(m["jaccard"], 4),
+                w.writerow([img, m["clase"], mt, f, c, round(m["dice"], 4), round(m["jaccard"], 4),
                             m["n_gt"], m["n_pred"], m["tp_gt"], m["tp_pred"]])
-    cv2.imwrite(str(REPORTES / "seg_dice_overlays.png"),
-                hoja([[fig[i][fc] for fc in combos] for i in ids_fig],
-                     [nombre(fc) for fc in combos], lado=200 if len(combos) > 3 else 400))
+    
 
     imgs = [r["imagen"] for r in filas]
     dice = {fc: np.array([res[fc][i]["dice"] for i in imgs]) for fc in combos}
     sin_fol = sum(int(r["n_foliculos"]) == 0 for r in filas)
     L = [f"Imágenes: {len(imgs)} (conjunto {args.conjunto}; {sin_fol} sin folículos en la "
-         f"máscara manual) | método: {args.metodo} | parámetros: {kw or 'por defecto'}", "",
-         f"{'combinación':22s}{'Dice':>7s}{'±DE':>7s}{'mediana':>8s}{'P':>7s}{'R':>7s}{'F1':>7s}"
+         f"máscara manual) | métodos: {' '.join(args.metodos)} | parámetros: {kw or 'por defecto'}", "",
+         f"{'combinación':32s}{'Dice':>7s}{'±DE':>7s}{'mediana':>8s}{'P':>7s}{'R':>7s}{'F1':>7s}"
          f"{'|Δn|':>8s}{'sesgo n':>9s}{'s/img':>7s}"]
     orden = sorted(combos, key=lambda fc: -dice[fc].mean())
+    f1s = {}
     for fc in orden:
         ms = [res[fc][i] for i in imgs]
         tpg, tpp = sum(m["tp_gt"] for m in ms), sum(m["tp_pred"] for m in ms)
@@ -165,7 +191,8 @@ def modo_dice(args, kw):
         P = tpp / npd if npd else float("nan")
         R = tpg / ng if ng else float("nan")
         F1 = 2 * P * R / (P + R) if P + R > 0 else 0.0
-        L.append(f"{nombre(fc):22s}{dice[fc].mean():7.3f}{dice[fc].std():7.3f}"
+        f1s[fc] = F1
+        L.append(f"{nombre(fc):32s}{dice[fc].mean():7.3f}{dice[fc].std():7.3f}"
                  f"{np.median(dice[fc]):8.3f}{P:7.3f}{R:7.3f}{F1:7.3f}"
                  f"{np.mean([abs(m['n_pred'] - m['n_gt']) for m in ms]):8.2f}"
                  f"{np.mean([m['n_pred'] - m['n_gt'] for m in ms]):+9.2f}"
@@ -175,6 +202,39 @@ def modo_dice(args, kw):
           f"IoU >= {args.iou} (y al revés para la precisión). |Δn|: error absoluto medio del conteo;",
           "sesgo n: automático - manual (+ = de más)."]
 
+    # --- selección automática de finalistas
+    n_vacias = sum(res[combos[0]][i]["n_gt"] == 0 for i in imgs)
+    piso = n_vacias / len(imgs)          # Dice de un predictor que nunca detecta nada
+    media = {fc: float(dice[fc].mean()) for fc in combos}
+    motivo = {}
+    for fc in orden:
+        if media[fc] <= piso:
+            motivo[fc] = "no supera al predictor vacío"
+            continue
+        dom = [o for o in orden if o != fc and media[o] >= media[fc] + args.margen
+               and f1s[o] >= f1s[fc] + args.margen]
+        if dom:
+            motivo[fc] = f"dominada por {nombre(dom[0])}"
+    finalistas = [fc for fc in orden if fc not in motivo]
+    L += ["", f"FINALISTAS (selección automática; {len(finalistas)} de {len(combos)})",
+          f"  Regla 1: Dice mayor que el del predictor vacío ({piso:.3f} = {n_vacias} de {len(imgs)} zonas sin folículos).",
+          f"  Regla 2: ninguna otra la supera en Dice Y en F1 por folículo, las dos por al menos {args.margen}.",
+          "  " + "  ".join(nombre(fc) for fc in finalistas) if finalistas else
+          "  Ninguna supera al predictor vacío: revisar los parámetros de la segmentación.",
+          f"  Descartadas por regla 1: {sum(m.startswith('no supera') for m in motivo.values())} | "
+          f"por regla 2: {sum(m.startswith('dominada') for m in motivo.values())}"]
+    if finalistas:
+        L.append("  Para el paso siguiente: --combos " + " ".join(nombre(fc) for fc in finalistas))
+    with open(REPORTES / "seg_finalistas.csv", "w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(["combinacion", "dice", "f1", "finalista", "motivo"])
+        for fc in orden:
+            w.writerow([nombre(fc), round(media[fc], 4), round(f1s[fc], 4),
+                        int(fc not in motivo), motivo.get(fc, "")])
+
+    cv2.imwrite(str(REPORTES / "seg_dice_overlays.png"),
+                hoja([[fig[i][fc] for fc in orden[:6]] for i in ids_fig],
+                     [nombre(fc) for fc in orden[:6]], lado=200))
     top = orden[0]
     if len(combos) >= 3:
         chi, p_fr = stats.friedmanchisquare(*[dice[fc] for fc in combos])
@@ -188,7 +248,7 @@ def modo_dice(args, kw):
                 p = stats.wilcoxon(dice[top], dice[fc]).pvalue
             except ValueError:   # diferencias todas cero
                 p = 1.0
-            L.append(f"  {nombre(top)} vs {nombre(fc):22s} p = "
+            L.append(f"  {nombre(top)} vs {nombre(fc):32s} p = "
                      f"{min(1.0, p * (len(combos) - 1)):.3g}")
     L += ["", "No elegir solo por Dice: mirar reports/seg_dice_overlays.png (verde = manual, rojo =",
           "automática). Con pocas imágenes las diferencias chicas entre combinaciones son ruido."]
@@ -196,11 +256,40 @@ def modo_dice(args, kw):
     print(texto)
     (REPORTES / "resumen_dice.txt").write_text(texto + "\n", encoding="utf-8")
 
+def modo_vista(args, kw):
+    """Figura para decidir a ojo: una fila por imagen y una columna por combinación (sin máscara manual).
+    Con --ciego las columnas se mezclan y se rotulan A, B, C...; la clave queda en un archivo aparte."""
+    if not args.combos:
+        raise SystemExit("--vista necesita --combos metodo+filtro+contraste ...")
+    combos = [tuple(c.split("+")) for c in args.combos]
+    rng = random.Random(args.seed)
+    if args.ciego:
+        rng.shuffle(combos)
+    filas = leer_splits(ROOT / args.splits, not args.todas_del_grupo, args.seed)
+    por_clase = defaultdict(list)
+    for r in filas:
+        por_clase[int(r["label"])].append(r)
+    muestra = [r for y in sorted(por_clase)
+               for r in rng.sample(por_clase[y], min(max(1, args.n_fig // 2), len(por_clase[y])))]
+    grilla = [[superponer(segment_detalle(ROOT / r["path"], metodo=m, filtro=f, contraste=c, **kw),
+                          ver_rechazos=args.ver_rechazos) for m, f, c in combos] for r in muestra]
+    letras = [chr(65 + i) for i in range(len(combos))]
+    REPORTES.mkdir(exist_ok=True)
+    cv2.imwrite(str(REPORTES / "seg_vista.png"),
+                hoja(grilla, letras if args.ciego else ["+".join(c) for c in combos], lado=220))
+    print("Filas de reports/seg_vista.png (de arriba hacia abajo):")
+    for i, r in enumerate(muestra, 1):
+        print(f"  {i}: {r['path']} (label {r['label']})")
+    if args.ciego:
+        clave = ["Clave de columnas (no mirar hasta decidir):"] + \
+                [f"  {l}: {'+'.join(c)}" for l, c in zip(letras, combos)]
+        (REPORTES / "seg_vista_clave.txt").write_text("\n".join(clave) + "\n", encoding="utf-8")
+        print("Columnas rotuladas A, B, C...; la clave está en reports/seg_vista_clave.txt")
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--filtros", nargs="+", default=["mediana", "lee", "kuan", "bilateral"])
-    ap.add_argument("--contrastes", nargs="+", default=["estirar", "clahe"])
+    ap.add_argument("--filtros", nargs="+", default=["ninguno", "wiener3", "wiener5", "gauss1.0", "frost7"])
+    ap.add_argument("--contrastes", nargs="+", default=["ninguno", "estirar"])
     ap.add_argument("--metodo", default="multiotsu", choices=["multiotsu", "otsu", "chanvese", "triangle", "li", "adaptativo"])
     ap.add_argument("--n-por-clase", type=int, default=40, help="0 = todas")
     ap.add_argument("--n-fig", type=int, default=8)
@@ -219,11 +308,28 @@ def main():
     ap.add_argument("--sin-reumbral", action="store_true",
                     help="desactivar el re-umbral con Otsu local de las regiones grandes o alargadas")
     ap.add_argument("--iou", type=float, default=0.5, help="umbral de IoU para la detección por folículo")
+    ap.add_argument("--mascaras", default=None, help="mascaras.csv: activa el modo Dice")
+    ap.add_argument("--conjunto", choices=["ajuste", "reporte", "todos"], default="ajuste")
+    ap.add_argument("--metodos", nargs="+", default=["otsu", "multiotsu", "chanvese", "adaptativo"])
+    ap.add_argument("--combos", nargs="+", default=None,
+                    help="combinaciones metodo+filtro+contraste (reemplaza al producto de --metodos/--filtros/--contrastes)")
+    ap.add_argument("--margen", type=float, default=0.02,
+                    help="margen de dominancia para elegir finalistas (en Dice y en F1)")
+    ap.add_argument("--vista", action="store_true",
+                    help="figura para decidir a ojo con las --combos, sin máscaras manuales")
+    ap.add_argument("--ciego", action="store_true",
+                    help="en --vista, oculta los nombres (A, B, C...) y guarda la clave en un archivo")
     args = ap.parse_args()
     kw = {k: v for k, v in dict(area_min=args.area_min, contraste_min=args.contraste_min,
                                 circ_min=args.circ_min, sigma_umbral=args.sigma_umbral,
                                 reumbral=False if args.sin_reumbral else None).items()
           if v is not None}
+    if args.vista:
+        modo_vista(args, kw)
+        return
+    if args.mascaras:
+       modo_dice(args, kw)
+       return
 
     filas = leer_splits(ROOT / args.splits, not args.todas_del_grupo, args.seed)
     rng = random.Random(args.seed)

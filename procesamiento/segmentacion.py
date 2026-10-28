@@ -104,7 +104,7 @@ def _estirar_roi(img, roi, p=(1, 99)):
     return (np.clip((img.astype(np.float32) - lo) / (hi - lo), 0, 1) * 255).astype(np.uint8)
 
 
-def preprocesar_roi(g, roi, filtro="mediana", contraste="estirar"):
+def preprocesar_roi(g, roi, filtro="mediana5", contraste="estirar"):
     f = filtrar(g, filtro)
     if contraste == "estirar":
         return _estirar_roi(f, roi)
@@ -171,7 +171,7 @@ def _reumbralar(lab, pre, area_max, elong_min, area_min, k, niveles=2):
     return out
 
 
-def segment_detalle(entrada, filtro="mediana", contraste="estirar", tam=256,
+def segment_detalle(entrada, filtro="mediana5", contraste="estirar", tam=256,
                     conservar_aspecto=True, metodo="multiotsu",
                     area_min=80, area_max_frac=0.05, circ_min=0.50, solidez_min=0.85,
                     reumbral=True,
