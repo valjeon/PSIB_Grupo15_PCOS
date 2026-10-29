@@ -1,0 +1,19 @@
+Imágenes: 1699 | grupos pHash (antes): 871 | grupos ahora: 8
+Vínculos nuevos por ORB+RANSAC: 57173 (umbral 60 inliers)
+Grupos con >1 imagen: 8 | grupo más grande: 320
+Imágenes 'únicas' reales (= grupos): 8 -> 1691 eran copias
+Grupos nuevos que en splits.csv estaban repartidos entre folds/hold-out: 8  <- fuga en la partición anterior
+Grupos con clases mezcladas: 0
+
+ATENCIÓN: un grupo de 320 imágenes puede ser encadenamiento de vínculos falsos. Revisar duplicados_ejemplos.png y probar --inliers-min más alto (35, 50).
+split    fold      n  grupos   PCOS  sanas
+cv          0    251       1    251      0
+cv          1    248       1      0    248
+cv          2    339       2     93    246
+cv          3    187       1    187      0
+cv          4    354       2    180    174
+holdout    -1    320       1      0    320
+
+Tiempo: 92 s
+Salida: splits_estricto.csv (no pisa splits.csv). Revisar reports/duplicados_ejemplos.png:
+cada fila debería ser UNA misma ecografía con distintas rotaciones/desplazamientos.
