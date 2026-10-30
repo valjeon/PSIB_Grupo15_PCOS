@@ -1,0 +1,56 @@
+Imágenes procesadas: 320 de 320 (0 sin archivo) | grupos: 8 | segmentación: multiotsu+mediana5+estirar
+Grupos (= ecografías originales):
+  grupo 0: infected     n=  40  folículos (mediana) = 5
+  grupo 1: infected     n=  40  folículos (mediana) = 15
+  grupo 2: infected     n=  40  folículos (mediana) = 16
+  grupo 3: infected     n=  40  folículos (mediana) = 4
+  grupo 4: notinfected  n=  40  folículos (mediana) = 2
+  grupo 5: notinfected  n=  40  folículos (mediana) = 5
+  grupo 6: notinfected  n=  40  folículos (mediana) = 5
+  grupo 7: notinfected  n=  40  folículos (mediana) = 2
+
+PCOS vs sanas con las medianas de los grupos (n efectivo = 8: 4 vs 4)
+característica                    PCOS      sana    AUC  p exacto  inestab.
+area_roi_px                  44893.750 28850.750   1.00     0.029      0.26
+frac_area_foliculos              0.085     0.020   1.00     0.029      0.12
+ratio_area_fol_estroma           0.099     0.021   1.00     0.029      0.11
+area_total_px                 3690.250   627.000   1.00     0.029      0.12
+area_media_px                  380.052   158.495   1.00     0.029      0.17
+area_mediana_px                341.500   137.000   1.00     0.029      0.24
+area_max_px                    970.750   251.250   1.00     0.029      0.22
+area_cv                          0.618     0.391   1.00     0.029      0.37
+diam_eq_rel_max                  0.167     0.101   1.00     0.029      0.29
+solidez_media                    0.923     0.891   1.00     0.029      0.40
+ratio_ejes_medio                 0.603     0.527   1.00     0.029      0.50
+dist_vecino_rel                  0.157     0.374   0.00     0.029      0.27
+clark_evans_R                    1.059     1.498   0.00     0.029      0.35
+brillo_foliculos                 0.065     0.155   0.00     0.029      0.18
+ratio_brillo_fol_estroma         0.205     0.472   0.00     0.029      0.14
+contraste_michelson              0.660     0.358   1.00     0.029      0.14
+glcm_contrast                    0.823     1.138   0.06     0.057      0.14
+glcm_homogeneity                 0.780     0.739   0.94     0.057      0.12
+excentricidad_media              0.776     0.843   0.06     0.057      0.45
+glcm_dissimilarity               0.508     0.612   0.12     0.086      0.12
+glcm_correlation                 0.968     0.946   0.88     0.086      0.09
+cnr_interfaz_medio               1.832     1.629   0.81     0.114      0.40
+circularidad_media               0.781     0.738   0.81     0.143      0.62
+n_foliculos                     10.000     3.500   0.81     0.171      0.17
+diam_eq_rel_medio                0.101     0.082   0.81     0.171      0.27
+estroma_std                      0.234     0.210   0.81     0.229      0.13
+frac_area_rechazos               0.045     0.022   0.75     0.229      0.25
+dominancia_max                   0.299     0.438   0.25     0.229      0.40
+densidad_x1e4px                  2.283     1.193   0.75     0.257      0.22
+area_min_px                    105.250    93.250   0.75     0.257      0.53
+glcm_energy                      0.204     0.182   0.69     0.314      0.21
+contraste_interfaz_medio        50.234    41.559   0.62     0.343      0.17
+gradiente_borde_medio          105.543    87.531   0.62     0.429      0.23
+cnr_fol_estroma                  1.352     1.330   0.50     0.686      0.30
+brillo_estroma                   0.320     0.292   0.56     0.771      0.16
+estroma_entropia                 5.601     5.618   0.50     0.829      0.18
+
+AUC: sobre medianas de grupo (1 = todas las PCOS por encima de todas las sanas, 0,5 = nada).
+p exacto: permutación de las 70 asignaciones; mínimo posible 0,029; SIN corregir por
+  comparaciones múltiples (36 características): tomarlo como orientativo.
+inestab.: rango intercuartílico entre variantes / rango entre grupos. < 1 = la diferencia
+  entre ecografías supera lo que cambia una misma ecografía al rotarla, hacerle zoom o recortarla.
+Con 8 ecografías no se estima una capacidad diagnóstica: se describe qué mide cada característica.

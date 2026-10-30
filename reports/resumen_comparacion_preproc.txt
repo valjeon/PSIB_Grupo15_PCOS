@@ -2,42 +2,44 @@ Muestra de métricas: hasta 20 imágenes por clase | tamaño 256
 
 FILTROS DE SPECKLE (SSI más bajo = suaviza más; beta más alto = conserva bordes)
 filtro    clase              SSI    beta   ms/img
-frost3    infected         0.982   0.761      7.3
-frost3    notinfected      0.961   0.611      7.3
-frost5    infected         0.966   0.429     17.6
-frost5    notinfected      0.935   0.323     17.6
-frost7    infected         0.955   0.398     33.7
-frost7    notinfected      0.917   0.307     33.7
-gauss1.0  infected         0.967   0.777      0.2
-gauss1.0  notinfected      0.942   0.696      0.2
-gauss1.5  infected         0.949   0.548      0.2
-gauss1.5  notinfected      0.916   0.441      0.2
-gauss2.0  infected         0.932   0.387      0.2
-gauss2.0  notinfected      0.895   0.293      0.2
-homomorficoinfected         0.980   0.499      1.3
-homomorficonotinfected      0.950   0.426      1.3
+frost3    infected         0.982   0.761      2.5
+frost3    notinfected      0.961   0.611      2.5
+frost5    infected         0.966   0.429      6.6
+frost5    notinfected      0.935   0.323      6.6
+frost7    infected         0.955   0.398     12.7
+frost7    notinfected      0.917   0.307     12.7
+gauss1.0  infected         0.967   0.777      0.0
+gauss1.0  notinfected      0.942   0.696      0.0
+gauss1.5  infected         0.949   0.548      0.1
+gauss1.5  notinfected      0.916   0.441      0.1
+gauss2.0  infected         0.932   0.387      0.1
+gauss2.0  notinfected      0.895   0.293      0.1
+homomorficoinfected         0.980   0.499      0.4
+homomorficonotinfected      0.950   0.426      0.4
+homomorfico_wiener3infected         0.992   0.756      1.8
+homomorfico_wiener3notinfected      0.974   0.657      1.8
 mediana3  infected         0.986   0.715      0.0
 mediana3  notinfected      0.969   0.588      0.0
-mediana5  infected         0.972   0.456      0.3
-mediana5  notinfected      0.942   0.279      0.3
-mediana7  infected         0.962   0.366      2.5
-mediana7  notinfected      0.923   0.195      2.5
-promedio3 infected         0.973   0.680      0.2
-promedio3 notinfected      0.951   0.511      0.2
-promedio5 infected         0.950   0.168      0.1
-promedio5 notinfected      0.917   0.075      0.1
-promedio7 infected         0.930   0.022      0.1
-promedio7 notinfected      0.893   0.004      0.1
-wiener3   infected         0.992   0.852      6.5
-wiener3   notinfected      0.977   0.783      6.5
-wiener5   infected         0.978   0.732      6.2
-wiener5   notinfected      0.956   0.654      6.2
+mediana5  infected         0.972   0.456      0.0
+mediana5  notinfected      0.942   0.279      0.0
+mediana7  infected         0.962   0.366      0.1
+mediana7  notinfected      0.923   0.195      0.1
+promedio3 infected         0.973   0.680      0.0
+promedio3 notinfected      0.951   0.511      0.0
+promedio5 infected         0.950   0.168      0.0
+promedio5 notinfected      0.917   0.075      0.0
+promedio7 infected         0.930   0.022      0.0
+promedio7 notinfected      0.893   0.004      0.0
+wiener3   infected         0.991   0.852      1.6
+wiener3   notinfected      0.977   0.783      1.6
+wiener5   infected         0.978   0.732      1.5
+wiener5   notinfected      0.956   0.654      1.5
 
 CONTRASTE (sobre filtro 'mediana5')
 metodo    clase           entropia   desvio
 global    infected           6.732    74.30
 global    notinfected        6.418    74.24
-ninguno   infected           6.904    59.00
+ninguno   infected           6.904    59.01
 ninguno   notinfected        6.552    37.46
 
 Figuras: reports/preproc_marcas.png, preproc_filtros.png, preproc_contraste.png

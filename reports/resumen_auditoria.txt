@@ -16,6 +16,7 @@ Imágenes auditadas: 1699
 
 Chequeo de atajos: AUC solo con metadatos (tamaño, bytes, brillo, saturación, color) = 1.000 -> ALERTA: la clase se predice sin mirar el ovario; hay sesgo de adquisición
   (CV sin agrupar: los near-duplicados lo inflan un poco. ~0,5 es lo esperable.)
+  AUC de cada característica sola (0,5 = no separa): aspecto=1.00, ancho=0.95, desvio=0.91, brillo=0.85, bytes=0.83, alto=0.82, frac_sat=0.57, frac_color=0.50
 
 Revisión visual pendiente (a mano):
   - /Users/somi/Documents/PSIB/PSIB_Grupo15_PCOS/reports/muestra_azar_<clase>.jpg y muestra_marcas_<clase>.jpg
