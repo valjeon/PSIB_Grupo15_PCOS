@@ -35,9 +35,9 @@ grupo, con folículos en rojo y estroma en verde) y, con --imagenes N, figuras_c
 con una figura por imagen: contornos numerados | estroma y folículos | mediciones.
 
 Uso (desde cualquier carpeta):
-    python procesamiento/caracteristicas.py --n-por-grupo 40 --imagenes 3
-    python procesamiento/caracteristicas.py --n-por-grupo 0        # todas las imágenes
-    python procesamiento/caracteristicas.py --metodo chanvese --filtro frost7 --contraste ninguno
+    python procesamiento/texturas.py --n-por-grupo 40 --imagenes 3
+    python procesamiento/texturas.py --n-por-grupo 0        # todas las imágenes
+    python procesamiento/texturas.py --metodo chanvese --filtro frost7 --contraste ninguno
 """
 from collections import defaultdict
 from pathlib import Path

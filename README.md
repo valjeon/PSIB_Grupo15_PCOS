@@ -13,10 +13,27 @@ con sus clases infected / non-infected. El dataset original está en
 - `data/all/`: train y test unificados (se genera con el script)
 - `merge_data.py`: script de unificación
 
-## Orden en que se corren los archivos:
+## Código (`procesamiento/`)
+
+Cuatro archivos, cada uno con comandos (`python procesamiento/<archivo>.py <comando> -h`):
+
+| Archivo | Comandos |
+|---|---|
+| `limpieza.py` | `limpiar`, `auditar`, `splits`, `duplicados` |
+| `preprocesamiento.py` | `comparar`, `anotar-rois`, `elegir-filtro`, `procesar` |
+| `segmentacion.py` | `comparar`, `ver-casos`, `anotar-mascaras` |
+| `texturas.py` | (sin comandos) características de folículos y estroma |
+
+## Orden en que se corren
+
+```
 python merge_data.py
-python clean_data.py
-python audit_data.py
-python make_splits.py
-python comparar_preprocesamiento.py
-python procesar_dataset.py
+python procesamiento/limpieza.py limpiar
+python procesamiento/limpieza.py auditar
+python procesamiento/limpieza.py splits
+python procesamiento/limpieza.py duplicados
+python procesamiento/preprocesamiento.py comparar
+python procesamiento/preprocesamiento.py procesar
+python procesamiento/segmentacion.py comparar --splits splits2.csv
+python procesamiento/texturas.py --imagenes 3
+```
